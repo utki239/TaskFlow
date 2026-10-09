@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101827" />
+  <meta name="description" content="TaskFlow — a simple task manager that keeps your day on track." />
+  <title>TaskFlow — Make room for what matters</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f8faff;
+      --ink: #172033;
+      --muted: #7b8497;
+      --line: #e8ebf2;
+      --accent: #5b6df8;
+      --accent-dark: #4858df;
+      --accent-soft: #edf0ff;
+      --green: #168565;
+      --green-soft: #e6f7f0;
+      --danger: #d94b64;
+      --danger-soft: #fff0f2;
+      --shadow: 0 18px 55px rgba(27, 39, 74, .08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(91,109,248,.09), transparent 25rem),
+        radial-gradient(circle at 100% 15%, rgba(112,83,238,.07), transparent 27rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(91,109,248,.3);
+      outline-offset: 3px;
+    }
+
+    .app-shell { width: min(100% - 36px, 1000px); margin: 0 auto; padding: 34px 0 54px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 46px; }
+    .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; color: inherit; }
+    .brand-mark {
+      display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px;
+      color: white; background: linear-gradient(145deg, #7180ff, #4d5ce6);
+      box-shadow: 0 8px 20px rgba(91,109,248,.28);
+    }
+    .brand-mark svg { width: 23px; height: 23px; }
+    .brand-name { font-size: 20px; font-weight: 800; letter-spacing: -.7px; }
+    .brand-name span { color: var(--accent); }
+    .local-badge { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid #e4e8f1; border-radius: 999px; color: #626d81; background: rgba(255,255,255,.72); font-size: 12px; font-weight: 650; }
+    .local-badge .dot { width: 7px; height: 7px; background: #26b58a; border-radius: 50%; box-shadow: 0 0 0 3px #e1f7ef; }
+
+    .intro { margin-bottom: 29px; }
+    .eyebrow { margin: 0 0 11px; color: var(--accent); text-transform: uppercase; font-size: 11px; font-weight: 800; letter-spacing: 1.7px; }
+    h1 { margin: 0; font-size: clamp(32px, 5vw, 46px); letter-spacing: -2px; line-height: 1.12; font-weight: 800; }
+    h1 span { color: var(--accent); }
+    .subtitle { margin: 13px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; margin-bottom: 22px; }
+    .stat-card { display: flex; align-items: center; gap: 13px; padding: 17px 18px; background: rgba(255,255,255,.82); border: 1px solid rgba(231,235,244,.95); border-radius: 17px; }
+    .stat-icon { flex: 0 0 auto; display: grid; place-items: center; width: 39px; height: 39px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); }
+    .stat-icon svg { width: 19px; height: 19px; }
+    .stat-card:nth-child(2) .stat-icon { color: var(--green); background: var(--green-soft); }
+    .stat-card:nth-child(3) .stat-icon { color: #a16bdb; background: #f3ebff; }
+    .stat-number { display: block; font-size: 21px; line-height: 1.1; font-weight: 800; letter-spacing: -.6px; }
+    .stat-label { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 600; }
+
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 18px; align-items: start; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 21px; box-shadow: var(--shadow); overflow: hidden; }
+    .main-panel { min-height: 390px; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 23px 24px 18px; }
+    .panel-title { margin: 0; font-size: 17px; letter-spacing: -.4px; font-weight: 800; }
+    .panel-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .task-count { padding: 6px 10px; border-radius: 999px; color: var(--accent); background: var(--accent-soft); font-size: 11px; font-weight: 800; white-space: nowrap; }
+
+    .composer { display: flex; gap: 9px; padding: 0 24px 20px; }
+    .input-wrap { position: relative; flex: 1; min-width: 0; }
+    .input-wrap svg { position: absolute; top: 50%; left: 14px; width: 17px; height: 17px; transform: translateY(-50%); color: #929bb0; pointer-events: none; }
+    .task-input { width: 100%; height: 47px; padding: 0 13px 0 41px; color: var(--ink); background: #fafbfe; border: 1px solid #e6e9f2; border-radius: 12px; outline: none; transition: border-color .18s, box-shadow .18s, background .18s; font-size: 13px; }
+    .task-input::placeholder { color: #a0a8b9; }
+    .task-input:focus { border-color: #9aa5ff; background: white; box-shadow: 0 0 0 4px rgba(91,109,248,.09); }
+    .add-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 17px; height: 47px; border: 0; border-radius: 12px; color: white; background: var(--accent); font-size: 13px; font-weight: 750; box-shadow: 0 6px 15px rgba(91,109,248,.23); transition: transform .15s, background .15s, box-shadow .15s; white-space: nowrap; }
+    .add-button:hover { background: var(--accent-dark); box-shadow: 0 8px 18px rgba(91,109,248,.28); transform: translateY(-1px); }
+    .add-button:active { transform: translateY(0); }
+    .add-button svg { width: 16px; height: 16px; }
+
+    .filter-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0 24px 13px; border-bottom: 1px solid #f0f2f7; }
+    .filters { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .filter-button { padding: 7px 10px; color: #818a9c; background: transparent; border: 0; border-radius: 8px; font-size: 11px; font-weight: 750; transition: .15s; }
+    .filter-button:hover { color: var(--ink); background: #f5f6fb; }
+    .filter-button.active { color: var(--accent); background: var(--accent-soft); }
+    .clear-completed { padding: 7px 0 7px 7px; color: #9a7080; background: transparent; border: 0; font-size: 11px; font-weight: 650; white-space: nowrap; }
+    .clear-completed:hover { color: var(--danger); }
+
+    .task-list { list-style: none; margin: 0; padding: 5px 17px 14px; }
+    .task-item { display: flex; align-items: center; gap: 12px; padding: 13px 9px; border-bottom: 1px solid #f1f3f8; animation: fade-in .22s ease-out; }
+    .task-item:last-child { border-bottom: 0; }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .check-button { display: grid; place-items: center; flex: 0 0 auto; width: 21px; height: 21px; border: 1.7px solid #cfd5e3; border-radius: 7px; color: white; background: white; padding: 0; transition: .16s; }
+    .check-button:hover { border-color: var(--green); }
+    .check-button.checked { background: var(--green); border-color: var(--green); }
+    .check-button svg { width: 13px; height: 13px; }
+    .task-copy { min-width: 0; flex: 1; }
+    .task-text { display: block; overflow-wrap: anywhere; font-size: 13px; line-height: 1.5; font-weight: 650; color: #30394d; transition: color .15s; }
+    .task-item.completed .task-text { color: #a1a8b6; text-decoration: line-through; text-decoration-thickness: 1.5px; }
+    .task-meta { display: flex; align-items: center; gap: 6px; margin-top: 5px; color: #a0a8b8; font-size: 10px; }
+    .task-meta .mini-dot { width: 4px; height: 4px; border-radius: 50%; background: #c6cbd7; }
+    .done-label { color: var(--green); font-weight: 750; }
+    .delete-button { display: grid; place-items: center; width: 31px; height: 31px; flex: 0 0 auto; color: #adb4c3; background: transparent; border: 0; border-radius: 9px; opacity: 0; transition: .15s; }
+    .task-item:hover .delete-button, .delete-button:focus-visible { opacity: 1; }
+    .delete-button:hover { color: var(--danger); background: var(--danger-soft); }
+    .delete-button svg { width: 16px; height: 16px; }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 35px 20px 43px; text-align: center; }
+    .empty-icon { display: grid; place-items: center; width: 60px; height: 60px; margin-bottom: 14px; color: var(--accent); background: var(--accent-soft); border-radius: 19px; }
+    .empty-icon svg { width: 27px; height: 27px; }
+    .empty-title { margin: 0; font-size: 14px; font-weight: 800; }
+    .empty-copy { max-width: 240px; margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+    .side-column { display: grid; gap: 16px; }
+    .focus-card { padding: 21px; color: white; background: linear-gradient(145deg, #6676ff 0%, #4f5bdc 100%); border: 0; box-shadow: 0 18px 38px rgba(83,95,225,.24); }
+    .focus-label { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; opacity: .83; }
+    .focus-label svg { width: 15px; height: 15px; }
+    .focus-card h2 { margin: 17px 0 9px; max-width: 200px; font-size: 21px; line-height: 1.25; letter-spacing: -.6px; }
+    .focus-card p { margin: 0; color: rgba(255,255,255,.82); font-size: 12px; line-height: 1.65; }
+    .progress-block { margin-top: 21px; padding-top: 17px; border-top: 1px solid rgba(255,255,255,.2); }
+    .progress-labels { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 9px; color: rgba(255,255,255,.88); font-size: 10px; font-weight: 700; }
+    .progress-track { height: 6px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.23); }
+    .progress-bar { width: 0%; height: 100%; border-radius: inherit; background: white; transition: width .25s ease; }
+
+    .tip-card { padding: 20px; }
+    .tip-heading { display: flex; align-items: center; gap: 9px; margin-bottom: 13px; }
+    .tip-heading .tip-symbol { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: #fff5dc; color: #cb8d21; }
+    .tip-heading svg { width: 17px; height: 17px; }
+    .tip-heading h3 { margin: 0; font-size: 13px; font-weight: 800; }
+    .tip-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .tip-card strong { color: #4c566a; }
+    .footer { display: flex; justify-content: space-between; gap: 15px; margin-top: 25px; color: #a1a8b7; font-size: 11px; }
+    .footer strong { color: #7e8799; font-weight: 750; }
+    .storage-note { display: inline-flex; align-items: center; gap: 6px; }
+    .storage-note svg { width: 13px; height: 13px; }
+    .toast { position: fixed; left: 50%; bottom: 24px; z-index: 10; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; padding: 11px 15px; color: white; background: #202a40; border-radius: 11px; box-shadow: 0 10px 35px rgba(20,27,47,.22); font-size: 12px; font-weight: 650; transition: opacity .2s, transform .2s; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 760px) {
+      .app-shell { width: min(100% - 26px, 560px); padding-top: 23px; }
+      .topbar { margin-bottom: 35px; }
+      .workspace { grid-template-columns: 1fr; }
+      .side-column { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .focus-card, .tip-card { min-width: 0; }
+      .focus-card h2 { font-size: 18px; }
+      .stats { gap: 9px; }
+      .stat-card { padding: 13px 11px; gap: 9px; }
+      .stat-icon { width: 33px; height: 33px; border-radius: 10px; }
+      .stat-number { font-size: 19px; }
+      .stat-label { font-size: 10px; }
+    }
+    @media (max-width: 480px) {
+      .local-badge { padding: 8px 10px; font-size: 10px; }
+      .brand-name { font-size: 18px; }
+      .brand-mark { width: 38px; height: 38px; }
+      .stats { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .stat-card { flex-direction: column; align-items: flex-start; padding: 12px; }
+      .stat-number { font-size: 18px; }
+      .panel-header { padding: 20px 17px 16px; }
+      .composer { padding: 0 17px 17px; gap: 7px; }
+      .add-button { width: 47px; padding: 0; font-size: 0; gap: 0; }
+      .add-button svg { width: 19px; height: 19px; }
+      .filter-row { align-items: flex-start; flex-direction: column; padding: 0 17px 12px; gap: 4px; }
+      .task-list { padding-left: 10px; padding-right: 10px; }
+      .delete-button { opacity: 1; }
+      .side-column { grid-template-columns: 1fr; }
+      .focus-card h2 { max-width: 280px; font-size: 21px; }
+      .footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+    .account-actions{display:flex;align-items:center;gap:9px}.quiet-button,.icon-action{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 12px;font-size:12px;font-weight:700}.icon-action{width:39px;height:39px;padding:0;font-size:17px}.task-options{display:flex;align-items:center;gap:8px;padding:0 24px 15px}.task-options select,.task-options input,.filter-row select{border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--muted);padding:8px 10px;font-size:11px}.due-label{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px}.search-wrap{margin:0 24px 13px;display:flex;align-items:center;gap:9px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-soft);height:39px;color:var(--muted)}.search-wrap input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font-size:12px}.search-wrap kbd{border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:10px}.filter-row select{padding:7px 8px}.task-item{align-items:flex-start}.task-priority{display:inline-flex;padding:2px 6px;border-radius:999px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}.priority-high{color:#c54a55;background:#fff0f2}.priority-medium{color:#a77618;background:#fff7e3}.priority-low{color:#168565;background:#e6f7f0}.task-overdue{color:var(--danger)!important;font-weight:750}.task-category{color:var(--accent);font-weight:750}.task-tools{display:flex;align-items:center;gap:2px}.task-action{display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:var(--muted)}.task-action:hover{background:var(--accent-soft);color:var(--accent)}.auth-screen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:22px;background:radial-gradient(circle at 15% 15%,rgba(91,109,248,.14),transparent 28rem),var(--bg)}.auth-screen[hidden]{display:none}.auth-card{width:min(100%,430px);padding:35px;background:var(--surface);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}.auth-brand{margin-bottom:30px}.auth-card h1{font-size:38px}.auth-card .subtitle{margin-bottom:24px}.auth-form,.auth-form label,.edit-dialog form>label{display:grid;gap:8px}.auth-form{gap:15px}.auth-form label,.edit-dialog label{color:var(--ink);font-size:12px;font-weight:700}.auth-form input,.edit-dialog input,.edit-dialog textarea,.edit-dialog select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-soft);color:var(--ink);font:inherit}.auth-submit{width:100%;height:46px;font-size:13px}.auth-switch{text-align:center;color:var(--muted);font-size:12px}.auth-switch button{border:0;background:none;color:var(--accent);font-weight:800}.auth-foot{text-align:center;color:var(--muted);font-size:11px;margin:25px 0 0}.auth-error{margin:0;padding:10px;border-radius:8px;background:var(--danger-soft);color:var(--danger);font-size:12px}.edit-dialog{width:min(92vw,520px);border:1px solid var(--line);border-radius:20px;padding:0;background:var(--surface);color:var(--ink);box-shadow:0 30px 100px #121a3038}.edit-dialog::backdrop{background:#11182782;backdrop-filter:blur(3px)}.edit-dialog form{display:grid;gap:15px;padding:25px}.dialog-heading{display:flex;align-items:center;justify-content:space-between}.dialog-heading .eyebrow{margin-bottom:5px}.dialog-heading h2{margin:0;font-size:21px}.edit-dialog textarea{resize:vertical}.edit-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.edit-options label{display:grid;gap:7px}.dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:5px}.dark{color-scheme:dark;--bg:#101521;--surface:#171e2d;--surface-soft:#1d2637;--ink:#edf1fa;--muted:#a5aec1;--line:#2a3448;--accent-soft:#272f54;--green-soft:#173d36;--danger-soft:#482a35;--shadow:0 18px 55px #0004}.dark .task-text{color:#e0e6f2}.dark .task-input{background:#1d2637;border-color:#2a3448;color:var(--ink)}.dark .task-input:focus{background:#171e2d}.dark .stat-card{background:#171e2d;border-color:#2a3448}.dark .local-badge{background:#171e2d;border-color:#2a3448;color:var(--muted)}.dark .filter-button:hover{background:#232c40}.dark .priority-high{background:#482a35}.dark .priority-medium{background:#493c23}.dark .priority-low{background:#173d36}.task-note{margin-top:6px;color:var(--muted);font-size:11px;line-height:1.5;white-space:pre-wrap}.task-item.completed .task-note{opacity:.6}.task-text{cursor:pointer}.task-text:hover{color:var(--accent)}
+    .dark .tip-card strong{color:var(--ink)}.dark .stat-card:nth-child(3) .stat-icon{color:#c4a1ff;background:#302544}
+    [hidden]{display:none!important}.boot-screen{position:fixed;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;background:var(--bg)}
+    @media(max-width:540px){.task-options{padding-left:17px;padding-right:17px;flex-wrap:wrap}.task-options select{flex:1;min-width:110px}.due-label{flex:1}.search-wrap{margin-left:17px;margin-right:17px}.account-actions{gap:5px}.account-actions .local-badge{display:none}.edit-options{grid-template-columns:1fr}.auth-card{padding:26px}.task-tools{flex-direction:column}.filter-row select{max-width:100%}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <div class="app-shell" hidden>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="TaskFlow home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.1 4.1L19.5 6.8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8"/></svg>
+        </span>
+        <span class="brand-name">Task<span>Flow</span></span>
+      </a>
+      <div class="account-actions"><button id="theme-toggle" class="icon-action" type="button" aria-label="Switch color theme">☾</button><span class="local-badge" id="account-label"><span class="dot" aria-hidden="true"></span> Secure workspace</span><button id="logout-button" class="quiet-button" type="button" hidden>Sign out</button></div>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">Your personal workspace</p>
+        <h1 id="page-title">Make room for<br /><span>what matters.</span></h1>
+        <p class="subtitle">One small step at a time. Get your tasks out of your head<br class="desktop-break" /> and into a flow that works for you.</p>
+      </section>
+
+      <section class="stats" aria-label="Task overview">
+        <div class="stat-card">
+          <div class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M8 8h4M8 16h5"/></svg></div>
+          <div><span class="stat-number" id="total-stat">0</span><span class="stat-label">Total tasks</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></div>
+          <div><span class="stat-number" id="completed-stat">0</span><span class="stat-label">Completed</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <div><span class="stat-number" id="remaining-stat">0</span><span class="stat-label">To do</span></div>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Task manager">
+        <div class="panel main-panel">
+          <div class="panel-header">
+            <div><h2 class="panel-title">My tasks</h2><p class="panel-subtitle">Keep your next steps clear and simple.</p></div>
+            <span class="task-count" id="task-count">0 TASKS</span>
+          </div>
+            <form class="composer" id="task-form">
+            <label class="input-wrap">
+              <span class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">New task</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              <input class="task-input" id="task-input" name="task" type="text" maxlength="180" placeholder="What needs to get done?" autocomplete="off" required />
+            </label>
+            <button class="add-button" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add task</button>
+          </form>
+          <div class="task-options"><select id="new-category" aria-label="Task category"><option>Personal</option><option>Work</option><option>Study</option><option>Health</option><option>Other</option></select><select id="new-priority" aria-label="Task priority"><option value="medium">Medium priority</option><option value="high">High priority</option><option value="low">Low priority</option></select><label class="due-label">Due <input id="new-due" type="date" aria-label="Due date" /></label></div>
+          <label class="search-wrap"><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="Search tasks…" aria-label="Search tasks" /><kbd>/</kbd></label>
+          <div class="filter-row">
+            <div class="filters" role="group" aria-label="Filter tasks">
+              <button type="button" class="filter-button active" data-filter="all" aria-pressed="true">All tasks</button>
+              <button type="button" class="filter-button" data-filter="active" aria-pressed="false">To do</button>
+              <button type="button" class="filter-button" data-filter="completed" aria-pressed="false">Completed</button>
+            </div>
+            <select id="category-filter" aria-label="Filter by category"><option value="all">All categories</option></select>
+            <button type="button" class="clear-completed" id="clear-completed">Clear completed</button>
+          </div>
+          <ul class="task-list" id="task-list" aria-live="polite" aria-label="Your tasks"></ul>
+          <div class="empty-state" id="empty-state">
+            <div class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></div>
+            <h3 class="empty-title" id="empty-title">A fresh start</h3>
+            <p class="empty-copy" id="empty-copy">Your list is looking peaceful. Add a task above and make today count.</p>
+          </div>
+        </div>
+
+        <aside class="side-column" aria-label="Progress and tips">
+          <section class="panel focus-card">
+            <div class="focus-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 20l-1.9-6.8L4 11l6.1-2.2L12 3Z"/><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></svg> Your momentum</div>
+            <h2 id="momentum-title">Every little step counts.</h2>
+            <p id="momentum-copy">Add your first task and start building momentum. Progress is progress, no matter the size.</p>
+            <div class="progress-block">
+              <div class="progress-labels"><span>Overall progress</span><span id="progress-percent">0%</span></div>
+              <div class="progress-track" role="progressbar" aria-label="Task completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+            </div>
+          </section>
+          <section class="panel tip-card">
+            <div class="tip-heading"><span class="tip-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M8.5 14.5a7 7 0 1 1 7 0c-.8.6-1.3 1.5-1.5 2.5h-4c-.2-1-.7-1.9-1.5-2.5Z"/></svg></span><h3>A little reminder</h3></div>
+            <p><strong>Start small.</strong> Pick one thing you can finish in the next 10 minutes. A quick win can make the rest of your list feel lighter.</p>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="footer"><span>Made for your focus, one task at a time.</span><span class="storage-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 3v6h8V3M8 17h8"/></svg> Your tasks are securely saved</span></footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <section id="auth-screen" class="auth-screen" hidden><div class="auth-card"><a class="brand auth-brand" href="#"><span class="brand-mark" aria-hidden="true">✓</span><span class="brand-name">Task<span>Flow</span></span></a><p class="eyebrow">A calmer way to get things done</p><h1 id="auth-heading">Your focus,<br/><span>in one place.</span></h1><p class="subtitle">Sign in to keep your tasks safe and available on every visit.</p><form id="auth-form" class="auth-form"><label>Email address<input id="auth-email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com" /></label><label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="10" maxlength="128" required placeholder="At least 10 characters" /></label><p id="auth-error" class="auth-error" role="alert" hidden></p><button id="auth-submit" class="add-button auth-submit" type="submit">Sign in</button></form><p class="auth-switch"><span id="auth-switch-label">New to TaskFlow?</span> <button id="auth-switch" type="button">Create an account</button></p><p class="auth-foot">Private by design. Your workspace belongs to you.</p></div></section>
+  <div id="boot-screen" class="boot-screen" role="status">Loading your workspace…</div>
+  <dialog id="edit-dialog" class="edit-dialog"><form id="edit-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">Task details</p><h2>Edit task</h2></div><button class="icon-action" value="cancel" formnovalidate aria-label="Close">×</button></div><label>Task title<input id="edit-title" maxlength="180" required /></label><label>Notes<textarea id="edit-notes" maxlength="2000" rows="4" placeholder="Add useful details…"></textarea></label><div class="edit-options"><label>Category<select id="edit-category"><option>Personal</option><option>Work</option><option>Study</option><option>Health</option><option>Other</option></select></label><label>Priority<select id="edit-priority"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label><label>Due date<input id="edit-due" type="date" /></label></div><div class="dialog-actions"><button class="quiet-button" value="cancel" formnovalidate>Cancel</button><button class="add-button" id="save-edit" value="save">Save changes</button></div></form></dialog>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
