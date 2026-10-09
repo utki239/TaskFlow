@@ -8,5 +8,10 @@
     "dev": "node --watch server.mjs",
     "test": "node --test"
   },
-  "engines": { "node": ">=22.13.0" }
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "wrangler": "^4.149.0"
+  }
 }
