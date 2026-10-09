@@ -37,3 +37,4 @@ Run behind a TLS terminating reverse proxy, set `NODE_ENV=production`, configure
 Passwords are hashed with Node's scrypt and per-user random salts. Session identifiers are cryptographically random, stored as SHA-256 hashes, sent in HttpOnly, SameSite=Strict cookies, and expire after 30 days. Task queries are always scoped to the signed-in user. Mutating API requests validate their same-origin header; the server validates task fields and body sizes. Responses use a restrictive Content Security Policy and other browser security headers. Authentication attempts are rate limited in process memory, so use an edge or reverse-proxy rate limit for production deployments. Configure HTTPS at the proxy so production Secure cookies work.
 
 Theme choice is stored locally in the browser. Account data, including tasks, persists in the SQLite database. The product currently has no password reset, email verification, team sharing, or distributed session store.
+.
